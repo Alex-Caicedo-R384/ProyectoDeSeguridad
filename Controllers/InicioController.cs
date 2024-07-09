@@ -37,72 +37,19 @@ namespace ProyectoDeSeguridad.Controllers
 
             try
             {
-                string apiUrl = BuildApiUrl("DnsLookupAPI", model.Domain);
+                var dnsApiResponse = await CallDnsLookupApi(model.Domain);
 
-                using (HttpClient client = new HttpClient())
-                {
-                    var response = await client.GetAsync(apiUrl);
+                TempData["DnsApiResponse"] = JsonConvert.SerializeObject(dnsApiResponse);
 
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var responseBody = await response.Content.ReadAsStringAsync();
-
-                        Console.WriteLine("Respuesta de la API (sin serializar):");
-                        Console.WriteLine(responseBody);
-
-                        var dnsApiResponse = JsonConvert.DeserializeObject<DnsServiceResponse.Rootobject>(responseBody);
-
-                        Console.WriteLine("Respuesta de la API (deserializada):");
-                        Console.WriteLine($"Status: {dnsApiResponse.status}, Hostname: {dnsApiResponse.hostname}");
-
-                        if (dnsApiResponse.records != null)
-                        {
-                            foreach (var record in dnsApiResponse.records.A)
-                            {
-                                Console.WriteLine($"Dirección IP: {record.address}, TTL: {record.ttl}");
-                            }
-
-                            foreach (var mxRecord in dnsApiResponse.records.MX)
-                            {
-                                Console.WriteLine($"Exchange: {mxRecord.exchange}, Priority: {mxRecord.priority}");
-                            }
-
-                            foreach (var nsRecord in dnsApiResponse.records.NS)
-                            {
-                                Console.WriteLine($"Nameserver: {nsRecord.nameserver}");
-                            }
-
-                            foreach (var txtRecord in dnsApiResponse.records.TXT)
-                            {
-                                Console.WriteLine($"TXT Record: {txtRecord}");
-                            }
-                        }
-
-                        TempData["DnsApiResponse"] = JsonConvert.SerializeObject(dnsApiResponse);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError("", $"Error al llamar a la API {response.RequestMessage.RequestUri}: {response.ReasonPhrase}");
-                    }
-                }
                 ViewBag.Dominio = model.Domain;
 
                 return View();
-
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", $"Error al llamar a la API: {ex.Message}");
                 return View();
             }
-        }
-
-
-        private string BuildApiUrl(string apiName, string domain)
-        {
-            string apiUrl = ApiUrls["DnsLookupAPI"];
-            apiUrl = apiUrl.Replace("{domain}", domain);
-            return apiUrl;
         }
 
         [HttpGet]
@@ -127,6 +74,36 @@ namespace ProyectoDeSeguridad.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+
+
+
+        private async Task<DnsServiceResponse.Rootobject> CallDnsLookupApi(string domain)
+        {
+            string apiUrl = BuildApiUrl("DnsLookupAPI", domain);
+
+            using (HttpClient client = new HttpClient())
+            {
+                var response = await client.GetAsync(apiUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<DnsServiceResponse.Rootobject>(responseBody);
+                }
+                else
+                {
+                    throw new Exception($"Error al llamar a la API {response.RequestMessage.RequestUri}: {response.ReasonPhrase}");
+                }
+            }
+        }
+
+        private string BuildApiUrl(string apiName, string domain)
+        {
+            string apiUrl = ApiUrls["DnsLookupAPI"];
+            apiUrl = apiUrl.Replace("{domain}", domain);
+            return apiUrl;
         }
     }
 }
