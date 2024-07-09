@@ -1,0 +1,249 @@
+﻿@model IEnumerable<string>
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1 class="text-center">Evaluación de Activos</h1>
+
+<div class="row">
+    <div class="offset-9 col-3 mb-3">
+        <a asp-action="Evaluar" asp-controller="Inicio" class="btn d-block mx-auto btn-lg" style="background-color: #5F51F3; border-color: #5F51F3; color: #ffffff;">Evaluar</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="offset-12">
+        <div class="card border">
+            <div class="card-header bg-dark">
+                <h3 class="text-white"><strong> Información de Dominio </strong></h3>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(ViewBag.Dominio))
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="tblDominio" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Dominio</th>
+                                    <th>DNS</th>
+                                    <th>Categorización</th>
+                                    <th>Certificado SSL</th>
+                                    <th>Domain Reputation</th>
+                                    <th>Acciones Adicionales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        @ViewBag.Dominio
+                                    </td>
+                                    <td>
+
+                                    </td>
+                                    <td>
+
+                                    </td>
+
+                                    <td>
+
+                                    </td>
+
+                                    <td>
+
+                                    </td>
+
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-secondary dropdown-toggle" type="button" id="accionesDropdown_@ViewBag.Dominio" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #fa6607; color: #212529;">
+                                                Acciones
+                                            </button>
+                                            <div class="dropdown-menu" aria-labelledby="accionesDropdown_@ViewBag.Dominio">
+                                                <a class="dropdown-item m-1" href="@Url.Action("Detalles", "Inicio", new { dominio = ViewBag.Dominio })" style="background-color: #17202A; color: #FFFFFF;">Ver detalles</a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-center">No se ha especificado un dominio.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $('#tblDominio').DataTable({
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay información",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
+                    "infoEmpty": "Mostrando 0 to 0 of 0 Entradas",
+                    "infoFiltered": "(Filtrado de _MAX_ total entradas)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ Entradas",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "Sin resultados encontrados",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Ultimo",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    }
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    body {
+        background-color: #d9d9d9;
+    }
+
+    .table {
+        background-color: #c3c3c3 !important; /* Cambiar Color del fondo de la tabla */
+    }
+
+        .table tbody {
+            color: transparent; /* Cambia aquí el color de texto deseado para el cuerpo de la tabla */
+        }
+
+        .table th,
+        .table td {
+            background-color: #828282; /* Cambiar el color del fondo de las celdas */
+            padding: 10px; /* Agregar margen interno a las celdas */
+        }
+
+        .table th {
+            background-color: #2f4f4f; /* Cambiar el color del fondo de los encabezados de columna */
+            text-align: center; /* Alinear texto en el centro para encabezados */
+        }
+
+    .card-body {
+        background-color: #565656; /* Cambiar el color del fondo del cuerpo de la tarjeta */
+    }
+
+    tr {
+        background-color: #828282; /* Cambiar el color del fondo de las filas */
+    }
+
+    #tblDominio thead th {
+        color: #000; /* Cambia aquí el color de texto deseado para las cabeceras de columna */
+        font-weight: bold;
+    }
+
+    #tblDominio tbody td {
+        color: #fff; /* Cambia aquí el color de texto deseado para las celdas de datos */
+    }
+
+    /* Estilos para DataTables */
+    #tblDominio_wrapper .dataTables_info {
+        color: #ffffff; /* Cambia aquí el color de texto deseado para la información de tabla */
+    }
+
+    #tblDominio_wrapper .dataTables_paginate .paginate_button {
+        color: #ffffff; /* Cambia aquí el color de texto deseado para los botones de paginación */
+    }
+
+    #tblDominio_wrapper .dataTables_filter label {
+        color: #ffffff; /* Cambia aquí el color de texto deseado para la etiqueta de búsqueda */
+    }
+
+    #tblDominio_wrapper .dataTables_empty {
+        color: #ffffff; /* Cambia aquí el color de texto deseado para el mensaje cuando la tabla está vacía */
+    }
+
+    /* Color del texto de las opciones de paginación */
+    #tblDominio_wrapper .dataTables_length label {
+        color: #fff; /* Cambia aquí el color de texto deseado para las opciones de mostrar entradas */
+    }
+
+    .dataTables_length select {
+        background-color: #d9d9d9; /* Cambia el color de fondo del combobox */
+        color: #000; /* Cambia el color del texto dentro del combobox */
+        border: 1px solid #d9d9d9; /* Cambia el color del borde */
+        border-radius: 5px; /* Agrega un radio de borde */
+        padding: 3px; /* Ajusta el espacio interno */
+    }
+
+    /* Color del texto de la información de la tabla (mostrando X a Y de Z entradas) */
+    #tblDominio_wrapper .dataTables_info {
+        color: #fff; /* Cambia aquí el color de texto deseado para la información de la tabla */
+    }
+
+    /* Color del texto del campo de búsqueda */
+    #tblDominio_wrapper .dataTables_filter input[type="search"] {
+        color: #fff; /* Cambia aquí el color de texto deseado para el campo de búsqueda */
+        background-color: #d9d9d9; /* Color de fondo */
+        border: 0.1px solid #d9d9d9; /* Borde sólido de 1px del mismo color que el fondo */
+        margin-bottom: 5px; /* Agrega espacio en la parte inferior del campo de búsqueda */
+    }
+
+    /* Estilo para cambiar el color del borde de las celdas del encabezado */
+    #tblDominio th {
+        border-width: 0.1px; /* Ancho del borde */
+        border-style: outset; /* Estilo del borde */
+        border-color: #546565; /* Color del borde para las celdas del encabezado */
+    }
+
+    /* Estilo para cambiar el color del borde de las celdas de datos */
+    #tblDominio td {
+        border-width: 0.1px; /* Ancho del borde */
+        border-style: inset; /* Estilo del borde */
+        border-color: #BEAFAF; /* Color del borde para las celdas de datos */
+    }
+
+    #tblDominio {
+        border: 1px solid #828282; /* Borde sólido de 1px */
+        border-radius: 5px; /* Esquinas redondeadas */
+        box-sizing: border-box;
+        width: 100%; /* Opcional: ajusta el ancho de la tabla */
+    }
+
+        #tblDominio th {
+            text-align: center; /* Alineación del texto en el centro */
+        }
+
+        #tblDominio tr:hover {
+            background-color: #eaeaea; /* Estilo de hover para resaltar las filas */
+        }
+
+
+    /* Estilos para el fondo del menú desplegable */
+    .dropdown-menu {
+        background-color: #828282; /* Cambia el color de fondo del menú desplegable */
+        border: 4px; /* Borde sólido */
+        border-color: #ced4da;
+        border-style: solid; /* Estilo del borde */
+        border-radius: 10px; /* Radio de borde */
+        padding: 6px 5px; /* Espaciado interno */
+        box-sizing: border-box; /* Incluye el borde en el tamaño total del elemento */
+    }
+
+        /* Estilos para los ítems del menú desplegable */
+        .dropdown-menu a.dropdown-item {
+            border: none; /* Quita el borde de los ítems */
+            color: #212529; /* Cambia el color del texto de los ítems */
+            text-decoration: none; /* Quitar subrayado */
+            display: block; /* Mostrar como bloque */
+            border-radius: 10px; /* Radio de borde */
+            padding: 5px 5px; /* Espaciado interno */
+        }
+
+        .dropdown-menu button.dropdown-item {
+            width: 100%; /* Ajusta el ancho de los botones al 100% */
+            margin: 5px 5px; /* Agrega margen superior e inferior */
+        }
+</style>
+

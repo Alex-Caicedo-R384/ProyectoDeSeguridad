@@ -1,0 +1,60 @@
+﻿@model ProyectoDeSeguridad.Models.DomainRequest
+
+@{
+    ViewData["Title"] = "Búsqueda de Dominio";
+}
+<h2>Búsqueda de Dominio</h2>
+
+@using (Html.BeginForm("Index", "Inicio", FormMethod.Post))
+{
+    <div class="form-group">
+        @Html.TextBoxFor(m => m.Domain, new { @class = "form-control", id = "txtDomain" })
+        @Html.ValidationMessageFor(m => m.Domain, "", new { @class = "text-danger" })
+    </div>
+
+    <div>
+        <button type="submit" class="btn btn-custom" onclick="return validateDomain()">Buscar</button>
+    </div>
+}
+
+@if (ViewData.ModelState.IsValid == false)
+{
+    <div class="alert alert-danger mt-3">
+        @foreach (var modelState in ViewData.ModelState.Values)
+        {
+            foreach (var error in modelState.Errors)
+            {
+                <p>@error.ErrorMessage</p>
+            }
+        }
+    </div>
+}
+
+<style>
+    body {
+        background-color: #d9d9d9;
+    }
+
+    .btn-custom {
+        background-color: #780000; /* Color rojo */
+        color: #fff; /* Color del texto */
+        cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+        margin-top: 10px; /* Añade margen arriba */
+    }
+
+        .btn-custom:hover {
+            background-color: #370617;
+            color: #fff;
+        }
+</style>
+
+<script>
+    function validateDomain() {
+        var domain = document.getElementById("txtDomain").value.trim();
+        if (domain === "") {
+            alert("Por favor ingrese un dominio antes de buscar.");
+            return false;
+        }
+        return true;
+    }
+</script>

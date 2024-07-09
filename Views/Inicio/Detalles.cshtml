@@ -1,0 +1,141 @@
+﻿@model ProyectoDeSeguridad.Models.DnsServiceResponse.Rootobject
+
+@{
+    ViewData["Title"] = "Detalle de los Activos";
+}
+
+<div class="row">
+    <div class="offset-12">
+        <div class="card border">
+            <div class="card-header bg-dark">
+                <h3 class="text-white"><strong> Detalles </strong></h3>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="dnsTab" data-toggle="tab" href="#dns">API DNS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="categorizacionTab" data-toggle="tab" href="#categorizacion">API Web Categorization</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="sslTab" data-toggle="tab" href="#ssl">API SSL Certificate</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="reputacionTab" data-toggle="tab" href="#reputacion">Domain Reputation</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="dns">
+                        <div class="card-body">
+                            @if (Model != null)
+                            {
+                                <h4>Status: @Model.status</h4>
+                                <h4>Hostname: @Model.hostname</h4>
+
+                                <h5>Registros A:</h5>
+                                @if (Model.records?.A != null)
+                                {
+                                    foreach (var record in Model.records.A)
+                                    {
+                                        <p>Dirección IP: @record.address, TTL: @record.ttl</p>
+                                    }
+                                }
+
+                                <h5>Registros MX:</h5>
+                                @if (Model.records?.MX != null)
+                                {
+                                    foreach (var mxRecord in Model.records.MX)
+                                    {
+                                        <p>Exchange: @mxRecord.exchange, Priority: @mxRecord.priority</p>
+                                    }
+                                }
+
+                                <h5>Registros NS:</h5>
+                                @if (Model.records?.NS != null)
+                                {
+                                    foreach (var nsRecord in Model.records.NS)
+                                    {
+                                        <p>Nameserver: @nsRecord.nameserver</p>
+                                    }
+                                }
+
+                                <h5>Registros TXT:</h5>
+                                @if (Model.records?.TXT != null)
+                                {
+                                    foreach (var txtRecord in Model.records.TXT)
+                                    {
+                                        <p>TXT Record: @txtRecord</p>
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <p>No se encontraron datos de DNS para mostrar.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="categorizacion">
+                        <!-- Información de API Categorizacion -->
+                        <div class="card-body">
+                            <!-- Puedes mostrar la información de categorización aquí -->
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="ssl">
+                        <!-- Información de API SSL -->
+                        <div class="card-body">
+                            <!-- Puedes mostrar la información de SSL aquí -->
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="reputacion">
+                        <!-- Información de API de Reputación -->
+                        <div class="card-body">
+                            <!-- Puedes mostrar la información de reputación aquí -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#dnsTab').tab('show');
+
+            $('#dnsTab', '#categorizacionTab, #sslTab, #reputacionTab').on('click', function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+            });
+        });
+    </script>
+}
+
+<style>
+    body {
+        background-color: #d9d9d9;
+    }
+
+    .card-body {
+        background-color: #565656; /* Cambiar el color del fondo la tablas */
+        color: #ffffff; /* Cambiar el color del texto dentro del card body */
+        font-weight: bold; /* Hacer que el texto dentro del cuerpo de la tarjeta sea negrita */
+    }
+
+    .list-group-item {
+        background-color: #333333; /* Cambiar el color de fondo de los elementos de la lista */
+    }
+
+        .list-group-item strong {
+            color: #5a5aad; /* Cambiar el color del texto de los nombres a rojo */
+        }
+
+    .custom-text-color {
+        color: #e6e1db; /* Cambia aquí el color de texto deseado para todos los elementos */
+    }
+</style>
