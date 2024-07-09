@@ -1,24 +1,77 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model List<ProyectoDeSeguridad.Models.Activo>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Valoración de Activos</title>
+</head>
+<body>
+    <h1>Valoración de Activos</h1>
+    <form asp-action="Evaluar" method="post">
+        <table>
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Nombre</th>
+                    <th>Valor</th>
+                    <th>Riesgo</th>
+                    <th>Valoración</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    <tr>
+                        <td>@Model[i].Id</td>
+                        <td>@Model[i].Nombre</td>
+                        <td>
+                            <input asp-for="@Model[i].Valor" class="form-control" />
+                        </td>
+                        <td>
+                            <input asp-for="@Model[i].Riesgo" class="form-control" />
+                        </td>
+                        <td>@Model[i].Valoracion</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <button type="submit" class="btn-custom">Calcular Valoración</button>
+    </form>
+</body>
+</html>
 
 
 <style>
-    body {
-        background-color: #d9d9d9;
-    }
-
-    .btn-custom {
-        background-color: #780000; /* Color rojo */
-        color: #fff; /* Color del texto */
-        cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
-        margin-top: 10px; /* Añade margen arriba */
-    }
-
-        .btn-custom:hover {
-            background-color: #370617;
-            color: #fff;
+        body {
+            background-color: #d9d9d9;
         }
-</style>
+
+        .btn-custom {
+            background-color: #780000; /* Color rojo */
+            color: #fff; /* Color del texto */
+            cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+            margin-top: 10px; /* Añade margen arriba */
+        }
+
+            .btn-custom:hover {
+                background-color: #370617;
+                color: #fff;
+            }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #780000;
+            color: white;
+        }
+    </style>

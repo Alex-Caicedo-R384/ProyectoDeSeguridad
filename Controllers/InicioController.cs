@@ -1,12 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ProyectoDeSeguridad.Models;
+using System;
 using System.Diagnostics;
 
 namespace ProyectoDeSeguridad.Controllers
 {
     public class InicioController : Controller
     {
+        private static readonly List<Activo> activos = new List<Activo>
+        {
+            new Activo { Id = 1, Nombre = "Servidor", Valor = 50000, Riesgo = 0.2M },
+            new Activo { Id = 2, Nombre = "Base de Datos", Valor = 100000, Riesgo = 0.5M },
+            // Agrega más activos según sea necesario
+        };
+
+
 
         [HttpGet]
         public IActionResult Inicio(string Domain)
@@ -160,9 +169,27 @@ namespace ProyectoDeSeguridad.Controllers
             return View();
         }
 
+        [HttpGet]
         public IActionResult Evaluar()
         {
-            return View();
+            return View(activos);
+        }
+
+        [HttpPost]
+        public IActionResult Evaluar(List<Activo> model)
+        {
+            foreach (var activo in model)
+            {
+                var originalActivo = activos.Find(a => a.Id == activo.Id);
+                if (originalActivo != null)
+                {
+                    originalActivo.Valor = activo.Valor;
+                    originalActivo.Riesgo = activo.Riesgo;
+                    originalActivo.Valoracion = originalActivo.Valor - (originalActivo.Valor * originalActivo.Riesgo);
+                }
+            }
+
+            return View(activos);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
