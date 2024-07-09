@@ -4,7 +4,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1 class="text-center">Evaluación de Activos</h1>
+<h1 class="text-center">Dominio</h1>
 
 <div class="row">
     <div class="offset-9 col-3 mb-3">
@@ -26,36 +26,17 @@
                             <thead>
                                 <tr>
                                     <th>Dominio</th>
-                                    <th>DNS</th>
-                                    <th>Categorización</th>
-                                    <th>Certificado SSL</th>
-                                    <th>Domain Reputation</th>
                                     <th>Acciones Adicionales</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>
+                                    <td class="align-middle text-center">
                                         @ViewBag.Dominio
                                     </td>
                                     <td>
-
-                                    </td>
-                                    <td>
-
-                                    </td>
-
-                                    <td>
-
-                                    </td>
-
-                                    <td>
-
-                                    </td>
-
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-secondary dropdown-toggle" type="button" id="accionesDropdown_@ViewBag.Dominio" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #fa6607; color: #212529;">
+                                        <div class="dropdown text-center">
+                                            <button class="btn btn-secondary dropdown-toggle" type="button" id="accionesDropdown_@ViewBag.Dominio" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #5F51F3; color: #212529;">
                                                 Acciones
                                             </button>
                                             <div class="dropdown-menu" aria-labelledby="accionesDropdown_@ViewBag.Dominio">
@@ -126,7 +107,7 @@
         }
 
         .table th {
-            background-color: #2f4f4f; /* Cambiar el color del fondo de los encabezados de columna */
+            background-color: #343a40; /* Cambiar el color del fondo de los encabezados de columna */
             text-align: center; /* Alinear texto en el centro para encabezados */
         }
 
@@ -135,11 +116,11 @@
     }
 
     tr {
-        background-color: #828282; /* Cambiar el color del fondo de las filas */
+        background-color: #343a40; /* Cambiar el color del fondo de las filas */
     }
 
     #tblDominio thead th {
-        color: #000; /* Cambia aquí el color de texto deseado para las cabeceras de columna */
+        color: #fff; /* Cambia aquí el color de texto deseado para las cabeceras de columna */
         font-weight: bold;
     }
 
