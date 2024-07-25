@@ -1,195 +1,211 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using ProyectoDeSeguridad.Models;
+using PreguntasRec.Datos;
+using PreguntasRec.Models;
 using System;
 using System.Diagnostics;
 
-namespace ProyectoDeSeguridad.Controllers
+namespace PreguntasRec.Controllers
 {
     public class InicioController : Controller
     {
-        private static readonly List<Activo> activos = new List<Activo>
-        {
-            new Activo { Id = 1, Nombre = "Servidor", Valor = 50000, Riesgo = 0.2M },
-            new Activo { Id = 2, Nombre = "Base de Datos", Valor = 100000, Riesgo = 0.5M },
-            // Agrega más activos según sea necesario
-        };
+        private readonly ApplicationDbContext _context;
 
+        public InicioController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public IActionResult Inicio()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var usuarios = await _context.Usuario
+                .OrderByDescending(u => u.Puntaje)
+                .ToListAsync();
+
+            return View(usuarios);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Index(Usuario model, string action)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Inicio", model);
+            }
+
+            if (action == "correo")
+            {
+                var existingUser = await _context.Usuario
+                    .FirstOrDefaultAsync(u => u.Correo == model.Correo);
+
+                if (existingUser != null)
+                {
+                    HttpContext.Session.SetString("UsuarioCorreo", existingUser.Correo);
+                    HttpContext.Session.SetInt32("UsuarioId", existingUser.UsuarioID);
+                    HttpContext.Session.SetString("UsuarioTag", existingUser.Tag);
+                    return RedirectToAction("Index", new { tag = existingUser.Tag, correo = existingUser.Correo, usuarioId = existingUser.UsuarioID });
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(model.Tag))
+                    {
+                        ViewBag.ShowTagField = true;
+                        return View("Inicio", model);
+                    }
+                    else
+                    {
+                        _context.Usuario.Add(model);
+                        await _context.SaveChangesAsync();
+
+                        HttpContext.Session.SetString("UsuarioCorreo", model.Correo);
+                        HttpContext.Session.SetInt32("UsuarioId", model.UsuarioID);
+                        HttpContext.Session.SetString("UsuarioTag", model.Tag);
+                        return RedirectToAction("Index", new { tag = model.Tag, correo = model.Correo, usuarioId = model.UsuarioID });
+                    }
+                }
+            }
+            else if (action == "invitado")
+            {
+                model.Correo = model.Correo ?? string.Empty;
+                model.Tag = "invitado" + new Random().Next(1, 1000).ToString();
+
+                _context.Usuario.Add(model);
+                await _context.SaveChangesAsync();
+
+                HttpContext.Session.SetString("UsuarioCorreo", model.Correo);
+                HttpContext.Session.SetInt32("UsuarioId", model.UsuarioID);
+                HttpContext.Session.SetString("UsuarioTag", model.Tag);
+                return RedirectToAction("Index");
+            }
+
+            ViewBag.Correo = model.Correo;
+            ViewBag.Tag = model.Tag;
+            ViewBag.Puntaje = model.Puntaje;
+
+            return View("Inicio", model);
+        }
 
 
         [HttpGet]
-        public IActionResult Inicio(string Domain)
+        public async Task<IActionResult> Preguntas(int? usuarioId, string correo, string tag)
         {
-            return View();
+            Usuario usuario = null;
+
+            // Intenta obtener el correo, el ID y el tag desde la sesión si no se pasan en los parámetros
+            if (string.IsNullOrEmpty(correo))
+            {
+                correo = HttpContext.Session.GetString("UsuarioCorreo");
+            }
+
+            if (!usuarioId.HasValue)
+            {
+                usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            }
+
+            if (string.IsNullOrEmpty(tag))
+            {
+                tag = HttpContext.Session.GetString("UsuarioTag");
+            }
+
+            if (!string.IsNullOrEmpty(correo))
+            {
+                usuario = await _context.Usuario.FirstOrDefaultAsync(u => u.Correo == correo);
+            }
+
+            if (usuario == null && usuarioId.HasValue)
+            {
+                usuario = await _context.Usuario.FindAsync(usuarioId.Value);
+            }
+
+            if (usuario == null)
+            {
+                return BadRequest("No se encontró el usuario.");
+            }
+
+            var preguntas = await _context.Preguntas.OrderBy(r => Guid.NewGuid()).Take(10).ToListAsync();
+
+            ViewBag.Usuario = usuario;
+            ViewBag.Preguntas = preguntas;
+            ViewBag.PreguntaActual = preguntas.FirstOrDefault();
+            ViewBag.PreguntaIndex = 0;
+            ViewBag.Puntaje = usuario.Puntaje;
+            ViewBag.Correo = usuario.Correo;
+            ViewBag.Tag = usuario.Tag;
+
+            return View(preguntas);
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> Index(DomainRequest model)
+        public async Task<IActionResult> Preguntas(int usuarioId, int preguntaId, string respuestaSeleccionada, int puntaje, int preguntaIndex)
         {
-            Console.WriteLine("Dominio recibido en Index: " + model.Domain);
-
-            if (string.IsNullOrEmpty(model?.Domain))
+            var usuario = await _context.Usuario.FindAsync(usuarioId);
+            if (usuario == null)
             {
-                ModelState.AddModelError("", "Por favor, escriba un dominio.");
+                return NotFound();
+            }
+
+            var pregunta = await _context.Preguntas.FindAsync(preguntaId);
+            if (pregunta == null)
+            {
+                return NotFound();
+            }
+
+            if (respuestaSeleccionada == pregunta.Correcta)
+            {
+                puntaje++;
+            }
+
+            preguntaIndex++;
+
+            var preguntasRespondidas = ViewBag.PreguntasRespondidas as HashSet<int> ?? new HashSet<int>();
+            preguntasRespondidas.Add(preguntaId);
+
+            var preguntasDisponibles = await _context.Preguntas
+                .Where(p => !preguntasRespondidas.Contains(p.PreguntaID))
+                .OrderBy(r => Guid.NewGuid())
+                .Take(10)
+                .ToListAsync();
+
+            if (preguntaIndex < preguntasDisponibles.Count)
+            {
+                ViewBag.PreguntaActual = preguntasDisponibles[preguntaIndex];
+                ViewBag.PreguntaIndex = preguntaIndex;
+                ViewBag.Puntaje = puntaje;
+                ViewBag.Usuario = usuario;
+                ViewBag.Preguntas = preguntasDisponibles;
+                ViewBag.Correo = usuario.Correo;
+                ViewBag.Tag = usuario.Tag;
+                ViewBag.PreguntasRespondidas = preguntasRespondidas;
+
                 return View();
-            }
-
-            try
-            {
-                var dnsApiResponse = await CallDnsLookupApi(model.Domain);
-                TempData["DnsApiResponse"] = JsonConvert.SerializeObject(dnsApiResponse);
-                ViewBag.DnsServiceResponse = dnsApiResponse;
-
-
-                var sslApiResponse = await CallSslCertificateApi(model.Domain);
-                TempData["SslApiResponse"] = JsonConvert.SerializeObject(sslApiResponse);
-                ViewBag.SSLCertificateResponse = sslApiResponse;
-
-
-                ViewBag.Dominio = model.Domain;
-
-                return View();
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", $"Error al llamar a la API: {ex.Message}");
-                return View();
-            }
-        }
-
-
-        [HttpGet]
-        public IActionResult Detalles()
-        {
-            if (TempData["DnsApiResponse"] != null)
-            {
-                var dnsApiResponseJson = TempData["DnsApiResponse"].ToString();
-                var dnsApiResponse = JsonConvert.DeserializeObject<DnsServiceResponse.Rootobject>(dnsApiResponseJson);
-
-                return View(dnsApiResponse);
-            }
-
-            if (TempData["SslApiResponse"] != null)
-            {
-                var sslApiResponseJson = TempData["SslApiResponse"].ToString();
-                var sslApiResponse = JsonConvert.DeserializeObject<SSLCertificateResponse.Rootobject>(sslApiResponseJson);
-
-                return View(sslApiResponse);
-            }
-
-            return View();
-        }
-
-        private async Task<DnsServiceResponse.Rootobject> CallDnsLookupApi(string domain)
-        {
-            string apiUrl = BuildApiUrl("DnsLookupAPI", domain);
-
-            using (HttpClient client = new HttpClient())
-            {
-                var response = await client.GetAsync(apiUrl);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseBody = await response.Content.ReadAsStringAsync();
-
-
-
-                    return JsonConvert.DeserializeObject<DnsServiceResponse.Rootobject>(responseBody);
-                }
-                else
-                {
-                    throw new Exception($"Error al llamar a la API {response.RequestMessage.RequestUri}: {response.ReasonPhrase}");
-                }
-            }
-        }
-
-        private async Task<SSLCertificateResponse.Rootobject> CallSslCertificateApi(string domain)
-        {
-            string apiUrl = BuildApiUrl("SSLCertificateAPI", domain);
-
-            using (HttpClient client = new HttpClient())
-            {
-                var response = await client.GetAsync(apiUrl);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseBody = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Respuesta de la API sin Serializar: {responseBody}"); 
-                    return JsonConvert.DeserializeObject<SSLCertificateResponse.Rootobject>(responseBody);
-                }
-                else
-                {
-                    Console.WriteLine($"Error al llamar a la API {response.RequestMessage.RequestUri}: {response.ReasonPhrase}"); // Imprime el error en la consola
-                    throw new Exception($"Error al llamar a la API {response.RequestMessage.RequestUri}: {response.ReasonPhrase}");
-                }
-            }
-        }
-
-
-        private static readonly Dictionary<string, string> ApiUrls = new Dictionary<string, string>
-        {
-            { "DnsLookupAPI", "https://networkcalc.com/api/dns/lookup/{domain}" },
-            { "DomainReputationAPI", "https://domain-reputation.whoisxmlapi.com/api/v2?apiKey={apiKey}&domainName={domain}" },
-            { "WebCategorizationAPI", "https://website-categorization.whoisxmlapi.com/api/v3?apiKey={apiKey}&url={url}" },
-            { "SSLCertificateAPI", "https://ssl-certificates.whoisxmlapi.com/api/v1?apiKey={apiKey}&domainName={domain}" }
-        };
-
-        private string ApiKey = "at_mvdRfgOl7UEnKpvNXOHm75Xx6YcOH";
-        private string ApiKey2 = "at_DkvYKL2PmvGhnZjOATUBQQ3GJGt0Q";
-        private string BuildApiUrl(string apiName, string domain)
-        {
-            string apiUrlPattern = ApiUrls[apiName];
-
-            if (apiUrlPattern.Contains("{apiKey}"))
-            {
-                string apiKey = apiName switch
-                {
-                    "DomainReputationAPI" => ApiKey,
-                    "WebCategorizationAPI" => ApiKey2,
-                    "SSLCertificateAPI" => ApiKey,
-                    _ => throw new ArgumentException("Se necesita una ApiKey"),
-                };
-
-                string apiUrl = apiUrlPattern.Replace("{domain}", domain)
-                                             .Replace("{apiKey}", apiKey);
-
-                return apiUrl;
             }
             else
             {
-                string apiUrl = apiUrlPattern.Replace("{domain}", domain);
+                usuario.Puntaje = puntaje;
+                _context.Update(usuario);
+                await _context.SaveChangesAsync();
 
-                return apiUrl;
+                return RedirectToAction("Index", new
+                {
+                    usuarioId = usuario.UsuarioID,
+                    correo = usuario.Correo,
+                    tag = usuario.Tag
+                });
             }
         }
 
         public IActionResult Privacy()
         {
             return View();
-        }
-
-        [HttpGet]
-        public IActionResult Evaluar()
-        {
-            return View(activos);
-        }
-
-        [HttpPost]
-        public IActionResult Evaluar(List<Activo> model)
-        {
-            foreach (var activo in model)
-            {
-                var originalActivo = activos.Find(a => a.Id == activo.Id);
-                if (originalActivo != null)
-                {
-                    originalActivo.Valor = activo.Valor;
-                    originalActivo.Riesgo = activo.Riesgo;
-                    originalActivo.Valoracion = originalActivo.Valor - (originalActivo.Valor * originalActivo.Riesgo);
-                }
-            }
-
-            return View(activos);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

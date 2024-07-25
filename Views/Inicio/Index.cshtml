@@ -1,62 +1,67 @@
-﻿@model IEnumerable<string>
+﻿@model IEnumerable<PreguntasRec.Models.Usuario>
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentUserTag = Context.Session.GetString("UsuarioTag");
+    var currentUserPuntaje = Model.FirstOrDefault(u => u.Tag == currentUserTag)?.Puntaje ?? 0;
 }
 
-<h1 class="text-center">Dominio</h1>
+<h1 class="text-center">R A N K I N G</h1>
 
 <div class="row">
-    <div class="offset-9 col-3 mb-3">
-        <a asp-action="Evaluar" asp-controller="Inicio" class="btn d-block mx-auto btn-lg" style="background-color: #5F51F3; border-color: #5F51F3; color: #ffffff;">Evaluar</a>
-    </div>
-</div>
-
-<div class="row">
-    <div class="offset-12">
+    <div class="col-md-8">
         <div class="card border">
-            <div class="card-header bg-dark">
-                <h3 class="text-white"><strong> Información de Dominio </strong></h3>
+            <div class="card-header bg-dark" id="ranking-header">
+                <h3 class="text-white"><strong>Ranking de Usuarios</strong></h3>
             </div>
             <div class="card-body">
-                @if (!string.IsNullOrEmpty(ViewBag.Dominio))
+                @if (Model.Count() > 0)
                 {
-                    <div class="table-responsive">
+                    <div class="table">
                         <table class="table table-bordered" id="tblDominio" width="100%" cellspacing="0">
                             <thead>
                                 <tr>
-                                    <th>Dominio</th>
-                                    <th>Acciones Adicionales</th>
+                                    <th>@Html.DisplayNameFor(m => m.Puntaje)</th>
+                                    <th>@Html.DisplayNameFor(m => m.Tag)</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td class="align-middle text-center">
-                                        @ViewBag.Dominio
-                                    </td>
-                                    <td>
-                                        <div class="dropdown text-center">
-                                            <button class="btn btn-secondary dropdown-toggle" type="button" id="accionesDropdown_@ViewBag.Dominio" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #5F51F3; color: #212529;">
-                                                Acciones
-                                            </button>
-                                            <div class="dropdown-menu" aria-labelledby="accionesDropdown_@ViewBag.Dominio">
-                                                <a class="dropdown-item m-1" href="@Url.Action("Detalles", "Inicio", new { dominio = ViewBag.Dominio })" style="background-color: #17202A; color: #FFFFFF;">Ver detalles</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                @foreach (var item in Model)
+                                {
+                                    <tr class="@(item.Tag == currentUserTag ? "table-success" : "")">
+                                        <td>@Html.DisplayFor(m => item.Puntaje)</td>
+                                        <td>@Html.DisplayFor(m => item.Tag)</td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
                 }
                 else
                 {
-                    <p class="text-center">No se ha especificado un dominio.</p>
+                    <p class="text-center">No hay Usuarios</p>
                 }
             </div>
         </div>
     </div>
+    <div class="col-md-4">
+        <div class="card border" id="user-info-card">
+            <div class="card-header bg-dark">
+                <h3 class="text-white"><strong>Tu Información</strong></h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Tag Actual:</strong> @currentUserTag</p>
+                <p><strong>Puntaje Actual:</strong> @currentUserPuntaje</p>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <a asp-action="Preguntas" asp-controller="Inicio" class="btn btn-custom btn-lg w-100">Iniciar Preguntas</a>
+            </div>
+        </div>
+    </div>
 </div>
+
 
 @section Scripts{
     <script>
@@ -87,144 +92,174 @@
     </script>
 }
 
+
 <style>
+    .btn-custom {
+        background-color: #c9ada7;
+        color: #000;
+        cursor: pointer;
+        margin-top: 10px;
+        margin-right: 5px;
+    }
+
+        .btn-custom:hover {
+            background-color: #ac8178;
+            color: #fff;
+        }
+
     body {
         background-color: #d9d9d9;
     }
 
     .table {
-        background-color: #c3c3c3 !important; /* Cambiar Color del fondo de la tabla */
+        background-color: #333333; /* Fondo de la tabla */
+        font-size: 16px;
     }
 
-        .table tbody {
-            color: transparent; /* Cambia aquí el color de texto deseado para el cuerpo de la tabla */
+        /* Estilo general para todas las celdas de la tabla */
+        .table th, .table td {
+            background-color: #828282; /* Fondo de celdas */
+            padding: 10px;
+            text-align: center;
+            vertical-align: middle;
         }
 
-        .table th,
-        .table td {
-            background-color: #828282; /* Cambiar el color del fondo de las celdas */
-            padding: 10px; /* Agregar margen interno a las celdas */
-        }
-
+        /* Estilo específico para las celdas de los encabezados */
         .table th {
-            background-color: #343a40; /* Cambiar el color del fondo de los encabezados de columna */
-            text-align: center; /* Alinear texto en el centro para encabezados */
+            background-color: #000; /* Fondo de los encabezados */
+            color: #c9ada7; /* Color del texto en los encabezados */
         }
+
+        /* Estilo para filas con clase .table-success */
+        .table tbody tr.table-success {
+            background-color: #CAAD91; /* Color de fondo para filas exitosas */
+        }
+
+        /* Estilo para filas normales en el cuerpo de la tabla */
+        .table tbody tr {
+            background-color: #343a40; /* Fondo para filas normales */
+            color: #000; /* Color del texto en filas normales */
+        }
+
+    /* Asegúrate de que el color de fondo de las celdas no se sobrescriba */
+    .table-success td {
+        background-color: #c9ada7; /* Asegura que el fondo de celdas en filas exitosas se aplique */
+    }
 
     .card-body {
-        background-color: #565656; /* Cambiar el color del fondo del cuerpo de la tarjeta */
+        background-color: #333333; /* Fondo del cuerpo de la tarjeta */
     }
 
     tr {
-        background-color: #343a40; /* Cambiar el color del fondo de las filas */
-    }
-
-    #tblDominio thead th {
-        color: #fff; /* Cambia aquí el color de texto deseado para las cabeceras de columna */
-        font-weight: bold;
-    }
-
-    #tblDominio tbody td {
-        color: #fff; /* Cambia aquí el color de texto deseado para las celdas de datos */
-    }
-
-    /* Estilos para DataTables */
-    #tblDominio_wrapper .dataTables_info {
-        color: #ffffff; /* Cambia aquí el color de texto deseado para la información de tabla */
-    }
-
-    #tblDominio_wrapper .dataTables_paginate .paginate_button {
-        color: #ffffff; /* Cambia aquí el color de texto deseado para los botones de paginación */
-    }
-
-    #tblDominio_wrapper .dataTables_filter label {
-        color: #ffffff; /* Cambia aquí el color de texto deseado para la etiqueta de búsqueda */
-    }
-
-    #tblDominio_wrapper .dataTables_empty {
-        color: #ffffff; /* Cambia aquí el color de texto deseado para el mensaje cuando la tabla está vacía */
-    }
-
-    /* Color del texto de las opciones de paginación */
-    #tblDominio_wrapper .dataTables_length label {
-        color: #fff; /* Cambia aquí el color de texto deseado para las opciones de mostrar entradas */
-    }
-
-    .dataTables_length select {
-        background-color: #d9d9d9; /* Cambia el color de fondo del combobox */
-        color: #000; /* Cambia el color del texto dentro del combobox */
-        border: 1px solid #d9d9d9; /* Cambia el color del borde */
-        border-radius: 5px; /* Agrega un radio de borde */
-        padding: 3px; /* Ajusta el espacio interno */
-    }
-
-    /* Color del texto de la información de la tabla (mostrando X a Y de Z entradas) */
-    #tblDominio_wrapper .dataTables_info {
-        color: #fff; /* Cambia aquí el color de texto deseado para la información de la tabla */
-    }
-
-    /* Color del texto del campo de búsqueda */
-    #tblDominio_wrapper .dataTables_filter input[type="search"] {
-        color: #fff; /* Cambia aquí el color de texto deseado para el campo de búsqueda */
-        background-color: #d9d9d9; /* Color de fondo */
-        border: 0.1px solid #d9d9d9; /* Borde sólido de 1px del mismo color que el fondo */
-        margin-bottom: 5px; /* Agrega espacio en la parte inferior del campo de búsqueda */
-    }
-
-    /* Estilo para cambiar el color del borde de las celdas del encabezado */
-    #tblDominio th {
-        border-width: 0.1px; /* Ancho del borde */
-        border-style: outset; /* Estilo del borde */
-        border-color: #546565; /* Color del borde para las celdas del encabezado */
-    }
-
-    /* Estilo para cambiar el color del borde de las celdas de datos */
-    #tblDominio td {
-        border-width: 0.1px; /* Ancho del borde */
-        border-style: inset; /* Estilo del borde */
-        border-color: #BEAFAF; /* Color del borde para las celdas de datos */
+        background-color: #343a40; /* Fondo de filas por defecto */
     }
 
     #tblDominio {
-        border: 1px solid #828282; /* Borde sólido de 1px */
-        border-radius: 5px; /* Esquinas redondeadas */
-        box-sizing: border-box;
-        width: 100%; /* Opcional: ajusta el ancho de la tabla */
+        border: 1px solid #333333; /* Borde de la tabla */
+        border-radius: 5px;
+        width: 100%;
     }
+
+        #tblDominio th, #tblDominio td {
+            border-width: 0.1px;
+        }
 
         #tblDominio th {
-            text-align: center; /* Alineación del texto en el centro */
+            border-style: outset;
+            border-color: #546565;
+            text-align: center;
         }
 
-        #tblDominio tr:hover {
-            background-color: #eaeaea; /* Estilo de hover para resaltar las filas */
+        #tblDominio td {
+            border-style: inset;
+            border-color: #BEAFAF;
         }
 
-
-    /* Estilos para el fondo del menú desplegable */
-    .dropdown-menu {
-        background-color: #828282; /* Cambia el color de fondo del menú desplegable */
-        border: 4px; /* Borde sólido */
-        border-color: #ced4da;
-        border-style: solid; /* Estilo del borde */
-        border-radius: 10px; /* Radio de borde */
-        padding: 6px 5px; /* Espaciado interno */
-        box-sizing: border-box; /* Incluye el borde en el tamaño total del elemento */
+    #tblDominio_wrapper .dataTables_info,
+    #tblDominio_wrapper .dataTables_paginate .paginate_button,
+    #tblDominio_wrapper .dataTables_filter label,
+    #tblDominio_wrapper .dataTables_empty,
+    #tblDominio_wrapper .dataTables_length label {
+        color: #c9ada7;
     }
 
-        /* Estilos para los ítems del menú desplegable */
-        .dropdown-menu a.dropdown-item {
-            border: none; /* Quita el borde de los ítems */
-            color: #212529; /* Cambia el color del texto de los ítems */
-            text-decoration: none; /* Quitar subrayado */
-            display: block; /* Mostrar como bloque */
-            border-radius: 10px; /* Radio de borde */
-            padding: 5px 5px; /* Espaciado interno */
+    #tblDominio_wrapper .dataTables_filter input[type="search"] {
+        color: #c9ada7;
+        background-color: #0000;
+        border: 0.1px solid #c9ada7;
+        margin-bottom: 5px;
+    }
+</style>
+
+<style>
+    #user-info-card {
+        border: 1px solid #007bff; /* Borde azul personalizado */
+        border-radius: .25rem; /* Radio de borde de la tarjeta */
+        margin-bottom: 20px; /* Espacio inferior de la tarjeta */
+    }
+
+        #user-info-card .card-header {
+            background-color: #0056b3; /* Color de fondo del encabezado */
+            color: #fff; /* Color del texto del encabezado */
         }
 
-        .dropdown-menu button.dropdown-item {
-            width: 100%; /* Ajusta el ancho de los botones al 100% */
-            margin: 5px 5px; /* Agrega margen superior e inferior */
+        #user-info-card .card-body {
+            background-color: #333; /* Color de fondo del cuerpo de la tarjeta */
+            color: #ffff; /* Color del texto del cuerpo de la tarjeta */
+            padding: 20px; /* Espaciado interno del cuerpo de la tarjeta */
+        }
+
+        #user-info-card p {
+            font-size: 1.1em; /* Tamaño de fuente del texto */
+            margin-bottom: 10px; /* Espacio inferior de cada párrafo */
+        }
+
+        #user-info-card strong {
+            color: #c9ada7; /* Color del texto en negrita */
         }
 </style>
+
+<style>
+    #welcome-card {
+        border: 1px solid #007bff; /* Borde azul personalizado */
+        border-radius: .25rem; /* Radio de borde de la tarjeta */
+        margin-bottom: 20px; /* Espacio inferior de la tarjeta */
+    }
+
+        #welcome-card .card-header {
+            background-color: #0056b3; /* Color de fondo del encabezado */
+            color: #c9ada7; /* Color del texto del encabezado */
+        }
+
+        #welcome-card .card-body {
+            background-color: #333; /* Color de fondo del cuerpo de la tarjeta */
+            color: #fff; /* Color del texto del cuerpo de la tarjeta */
+            padding: 20px; /* Espaciado interno del cuerpo de la tarjeta */
+        }
+
+        #welcome-card p {
+            font-size: 1.2em; /* Tamaño de fuente del párrafo */
+            line-height: 1.5; /* Altura de línea del párrafo */
+            margin-bottom: 20px; /* Espacio inferior del párrafo */
+        }
+
+        #welcome-card h5 {
+            font-size: 1.3em; /* Tamaño de fuente del subtítulo */
+            margin-bottom: 15px; /* Espacio inferior del subtítulo */
+        }
+
+        #welcome-card ul {
+            list-style-type: disc; /* Tipo de lista de puntos */
+            margin-left: 20px; /* Margen izquierdo de la lista */
+        }
+
+            #welcome-card ul li {
+                margin-bottom: 10px; /* Espacio inferior de cada ítem de lista */
+            }
+
+        #welcome-card strong {
+            color: #c9ada7; /* Color del texto en negrita */
+        }
+</style>
+
 
